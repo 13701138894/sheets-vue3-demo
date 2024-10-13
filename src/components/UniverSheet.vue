@@ -1,29 +1,20 @@
 <template>
-  <div ref="container" class="univer-container" />
+  <div
+    id="container"
+    class="RenderExcel"
+  >
+  </div> 
 </template>
 
 <script setup lang="ts">
-import { Univer, UniverInstanceType, Workbook, LocaleType, IWorkbookData } from "@univerjs/core";
-import { defaultTheme } from "@univerjs/design";
-import { UniverDocsPlugin } from "@univerjs/docs";
-import { UniverDocsUIPlugin } from "@univerjs/docs-ui";
-import { UniverFormulaEnginePlugin } from "@univerjs/engine-formula";
-import { UniverRenderEnginePlugin } from "@univerjs/engine-render";
-import { UniverSheetsPlugin } from "@univerjs/sheets";
-import { UniverSheetsFormulaPlugin } from "@univerjs/sheets-formula";
-import { UniverSheetsUIPlugin } from "@univerjs/sheets-ui";
-import { UniverUIPlugin } from "@univerjs/ui";
-import { onBeforeUnmount, onMounted, ref, toRaw } from "vue";
+import { ref, onMounted, onBeforeUnmount, toRaw } from 'vue'
+import '../assets/univer.css'
+import { UniverSheetsCustomMenuPlugin } from './plugin'
 
-/**
- * 
- * The ability to import locales from virtual modules and automatically import styles is provided by Univer Plugins. For more details, please refer to: https://univer.ai/guides/sheet/advanced/univer-plugins.
- * If you encounter issues while using the plugin or have difficulty understanding how to use it, please disable Univer Plugins and manually import the language packs and styles.
- * 
- * 【从虚拟模块导入语言包】以及【自动导入样式】是由 Univer Plugins 提供的能力，详情参考：https://univer.ai/zh-CN/guides/sheet/advanced/univer-plugins
- * 如果您在使用该插件的时候出现了问题，或者无法理解如何使用，请禁用 Univer Plugins，并手动导入语言包和样式
- */ 
-import { zhCN, enUS } from 'univer:locales'
+const univerRef = ref()
+const workbook = ref()
+const dataHeader = ref<string[]>([])
+let univerAPI
 
 const { data } = defineProps({
   // workbook data
@@ -33,95 +24,98 @@ const { data } = defineProps({
   },
 });
 
-const univerRef = ref<Univer | null>(null);
-const workbook = ref<Workbook | null>(null);
-const container = ref<HTMLElement | null>(null);
+const { 
+  UniverFacade,
+  UniverCore, 
+  UniverDesign, 
+  UniverUMD, 
+  UniverEngineRender, 
+  UniverEngineFormula, 
+  UniverUi, 
+  UniverDocs, 
+  UniverDocsUi, 
+  UniverSheets,
+  UniverSheetsUi,
+  UniverSheetsFormula,
+  UniverSheetsNumfmt,
+  UniverSheetsFilter,
+  UniverSheetsFilterUi,
+  UniverSheetsSort,
+  UniverSheetsSortUi,
+  UniverFindReplace,
+  UniverSheetsFindReplace,
+  UniverEnginePivot,
+  UniverSheetsPivotUi
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+}  = window as any
+
 
 onMounted(() => {
   init(data);
 });
 
+const init = (data) => {
+  const univer = new UniverCore.Univer({
+    theme: UniverDesign.defaultTheme,
+    locale: UniverCore.LocaleType.ZH_CN,
+    locales: {
+      [UniverCore.LocaleType.ZH_CN]: UniverUMD['zh-CN']
+    }
+  })
+  univerRef.value = univer
+  
+  univer.registerPlugin(UniverEngineRender.UniverRenderEnginePlugin)
+  univer.registerPlugin(UniverEngineFormula.UniverFormulaEnginePlugin)
+  univer.registerPlugin(UniverUi.UniverUIPlugin, {
+    container: 'container'
+  })
+  univer.registerPlugin(UniverDocs.UniverDocsPlugin, {
+    hasScroll: false
+  })
+  univer.registerPlugin(UniverDocsUi.UniverDocsUIPlugin)
+
+  univer.registerPlugin(UniverSheets.UniverSheetsPlugin)
+  univer.registerPlugin(UniverSheetsUi.UniverSheetsUIPlugin)
+  univer.registerPlugin(UniverSheetsFormula.UniverSheetsFormulaPlugin)
+  univer.registerPlugin(UniverSheetsNumfmt.UniverSheetsNumfmtPlugin)
+  univer.registerPlugin(UniverSheetsFilter.UniverSheetsFilterPlugin)
+  univer.registerPlugin(UniverSheetsFilterUi.UniverSheetsFilterUIPlugin)
+  univer.registerPlugin(UniverSheetsSort.UniverSheetsSortPlugin)
+  univer.registerPlugin(UniverSheetsSortUi.UniverSheetsSortUIPlugin)
+  univer.registerPlugin(UniverFindReplace.UniverFindReplacePlugin)
+  univer.registerPlugin(UniverSheetsFindReplace.UniverSheetsFindReplacePlugin)
+  // univer.registerPlugin(UniverEnginePivot.UniverSheetsPivotTablePlugin)
+  // univer.registerPlugin(UniverSheetsPivotUi.UniverSheetsPivotTableUIPlugin)
+  univer.registerPlugin(UniverSheetsCustomMenuPlugin)
+  // toRaw(univerRef.value).registerPlugin(UniverSheetsUi.UniverSheetsUIPlugin, {
+  //   menu: {
+  //     'report': {
+  //       hidden: true
+  //     }
+  //   }
+  // })
+  univerAPI = UniverFacade.FUniver.newAPI(univer)
+  workbook.value = univerRef.value?.createUnit(UniverCore.UniverInstanceType.UNIVER_SHEET, data)
+}
+
+const destroyUniver = () => {
+  toRaw(univerRef.value)?.dispose()
+  univerRef.value = null
+  workbook.value = null
+}
+
 onBeforeUnmount(() => {
   destroyUniver();
 });
 
-/**
- * Initialize univer instance and workbook instance
- * @param data {IWorkbookData} document see https://univer.ai/typedoc/@univerjs/core/interfaces/IWorkbookData
- */
-const init = (data = {}) => {
-  const univer = new Univer({
-    theme: defaultTheme,
-    locale: LocaleType.EN_US,
-    locales: {
-      [LocaleType.ZH_CN]: zhCN,
-      [LocaleType.EN_US]: enUS,
-    },
-  });
-  /**
-   * If you set the univer instance to a ref, you need to use toRaw to get the original object
-   * 
-   * 如果你将 univer 实例设置到 ref 中，使用时则需要使用 toRaw 获取原始对象
-   */
-  univerRef.value = univer;
-
-  // core plugins
-  univer.registerPlugin(UniverRenderEnginePlugin);
-  univer.registerPlugin(UniverFormulaEnginePlugin);
-  univer.registerPlugin(UniverUIPlugin, {
-    container: container.value!,
-  });
-
-  // doc plugins
-  univer.registerPlugin(UniverDocsPlugin, {
-    hasScroll: false,
-  });
-  univer.registerPlugin(UniverDocsUIPlugin);
-
-  // sheet plugins
-  univer.registerPlugin(UniverSheetsPlugin);
-  univer.registerPlugin(UniverSheetsUIPlugin);
-  univer.registerPlugin(UniverSheetsFormulaPlugin);
-
-  // create workbook instance
-  workbook.value = univer.createUnit<IWorkbookData, Workbook>(UniverInstanceType.UNIVER_SHEET, data)
-};
-
-/**
- * Destroy univer instance and workbook instance
- */
-const destroyUniver = () => {
-  toRaw(univerRef.value)?.dispose();
-  univerRef.value = null;
-  workbook.value = null;
-};
-
-/**
- * Get workbook data
- */
-const getData = () => {
-  if (!workbook.value) {
-    throw new Error('Workbook is not initialized');
-  }
-  return workbook.value.save();
-};
-
-defineExpose({
-  getData,
-  destroyUniver
-});
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.univer-container {
+.RenderExcel {
   width: 100%;
   height: 100%;
+  border: 1px solid #cdcdcd;
   overflow: hidden;
-}
-
-/* Also hide the menubar */
-:global(.univer-menubar) {
-  display: none;
 }
 </style>
