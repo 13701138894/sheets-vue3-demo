@@ -84,8 +84,8 @@ const init = (data) => {
   univer.registerPlugin(UniverSheetsSortUi.UniverSheetsSortUIPlugin)
   univer.registerPlugin(UniverFindReplace.UniverFindReplacePlugin)
   univer.registerPlugin(UniverSheetsFindReplace.UniverSheetsFindReplacePlugin)
-  // univer.registerPlugin(UniverEnginePivot.UniverSheetsPivotTablePlugin)
-  // univer.registerPlugin(UniverSheetsPivotUi.UniverSheetsPivotTableUIPlugin)
+  univer.registerPlugin(UniverEnginePivot.UniverSheetsPivotTablePlugin)
+  univer.registerPlugin(UniverSheetsPivotUi.UniverSheetsPivotTableUIPlugin)
   univer.registerPlugin(UniverSheetsCustomMenuPlugin)
   // toRaw(univerRef.value).registerPlugin(UniverSheetsUi.UniverSheetsUIPlugin, {
   //   menu: {
