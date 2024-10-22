@@ -44,7 +44,7 @@ const {
   UniverSheetsSortUi,
   UniverFindReplace,
   UniverSheetsFindReplace,
-  UniverEnginePivot,
+  UniverSheetsPivot,
   UniverSheetsPivotUi
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }  = window as any
@@ -84,8 +84,12 @@ const init = (data) => {
   univer.registerPlugin(UniverSheetsSortUi.UniverSheetsSortUIPlugin)
   univer.registerPlugin(UniverFindReplace.UniverFindReplacePlugin)
   univer.registerPlugin(UniverSheetsFindReplace.UniverSheetsFindReplacePlugin)
-  univer.registerPlugin(UniverEnginePivot.UniverSheetsPivotTablePlugin)
+  
+  console.log('UniverSheetsPivot.UniverSheetsPivotTablePlugin', UniverSheetsPivot.UniverSheetsPivotTablePlugin)
+  console.log('UniverSheetsPivotUi.UniverSheetsPivotTableUIPlugin', UniverSheetsPivotUi.UniverSheetsPivotTableUIPlugin)
+  univer.registerPlugin(UniverSheetsPivot.UniverSheetsPivotTablePlugin)
   univer.registerPlugin(UniverSheetsPivotUi.UniverSheetsPivotTableUIPlugin)
+  
   univer.registerPlugin(UniverSheetsCustomMenuPlugin)
   // toRaw(univerRef.value).registerPlugin(UniverSheetsUi.UniverSheetsUIPlugin, {
   //   menu: {
